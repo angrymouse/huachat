@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "devDependencies": {
+    "nuxt": "3.0.0-rc.1"
+  },
+  "dependencies": {
+    "@cosmjs/proto-signing": "^0.28.4",
+    "@cosmjs/stargate": "^0.28.4",
+    "@cosmjs/tendermint-rpc": "^0.28.4",
+    "@cosmostation/keystation-es6": "^0.1.1",
+    "@nuxtjs/tailwindcss": "^5.0.3"
+  }
+}
