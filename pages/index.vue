@@ -108,7 +108,13 @@ window.addEventListener(
 	"message",
 	function (e) {
 		console.log(e.origin);
-		if (e.origin != keystation.client) return;
+		if (
+			e.origin != keystation.client ||
+			!e.data ||
+			!e.data.account ||
+			!e.data.address
+		)
+			return;
 		console.log(e.data);
 		// e.data.account : User's keychain account. Remember this account!
 		keystationAccount.value = e.data;
@@ -151,7 +157,8 @@ Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 			});
 	}
 	fetchMessages();
-	setInterval(fetchMessages, 6000);
+
+	setInterval(fetchMessages, 10000);
 });
 async function sendMsg() {
 	let msg = currentMsg.value;
