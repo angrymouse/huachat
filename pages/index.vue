@@ -107,7 +107,7 @@ keystation.path = "44/118/0/0/0";
 let keystationAccount = ref(null);
 let messages = ref(null);
 let prefix = "chihuahua";
-const messagesdiv = ref(null);
+let messagesdiv = ref(null);
 window.addEventListener(
 	"message",
 	function (e) {
@@ -159,7 +159,7 @@ Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 					hash: txEs[txi].hash,
 				};
 			});
-		messagesdiv.scrollTop = messagesdiv.scrollHeight;
+		messagesdiv.value.scrollTop = messagesdiv.value.scrollHeight;
 	}
 	fetchMessages();
 
