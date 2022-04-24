@@ -37,7 +37,11 @@
 					Wait, chat is loading
 				</p>
 			</div>
-			<div v-else class="card-body h-full w-full flex p-1 flex-col">
+			<div
+				v-else
+				class="card-body h-full w-full flex p-1 flex-col overflow-y-scroll"
+				ref="messagesdiv"
+			>
 				<div
 					v-for="message in messages"
 					:key="message.hash"
@@ -155,6 +159,7 @@ Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 					hash: txEs[txi].hash,
 				};
 			});
+		$refs.messagesdiv.scrollTop = $refs.messagesdiv.scrollHeight;
 	}
 	fetchMessages();
 
