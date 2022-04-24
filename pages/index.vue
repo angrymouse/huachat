@@ -107,7 +107,7 @@ keystation.path = "44/118/0/0/0";
 let keystationAccount = ref(null);
 let messages = ref(null);
 let prefix = "chihuahua";
-let messagesdiv = ref(null);
+let messagesdiv = ref({ scrollTop: 0, scrollHeight: 0 });
 window.addEventListener(
 	"message",
 	function (e) {
