@@ -31,7 +31,7 @@
 			</div>
 			<div
 				class="w-full h-full flex items-center justify-center"
-				v-if="messages == null"
+				v-if="messages.length == 0"
 			>
 				<p class="text-xl font-mono font-semibold inline">
 					Wait, chat is loading
@@ -45,7 +45,7 @@
 				<div
 					v-for="message in messages"
 					:key="message.hash"
-					class="p-2 rounded-sm m-1 bg-gray-900"
+					class="p-2 rounded-sm m-1 bg-gray-900 message"
 				>
 					<div class="inline-flex font-thin text-cyan-900">
 						{{ message.from.nickname }}:
@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import { StargateClient, accountFromAny } from "@cosmjs/stargate";
 import { decodeTxRaw } from "@cosmjs/proto-signing";
 import {
@@ -99,15 +99,21 @@ import {
 } from "@cosmjs/tendermint-rpc";
 import Keystation from "@cosmostation/keystation-es6";
 let channel = "chihuahua1a3uq57j3gnwk4xmqhy2j5zhzasfm4k73pe9r3h";
-let currentMsg = ref("");
+let currentMsg = ref(null);
 let keystation = new Keystation();
 keystation.client = "https://keystation.cosmostation.io";
 keystation.lcd = "https://api.chihuahua.wtf";
 keystation.path = "44/118/0/0/0";
 let keystationAccount = ref(null);
-let messages = ref(null);
+
+let messages = ref([]);
+
 let prefix = "chihuahua";
 let messagesdiv = ref({ scrollTop: 0, scrollHeight: 0 });
+let msgscontainer;
+onMounted(() => {
+	msgscontainer = messagesdiv.value;
+});
 window.addEventListener(
 	"message",
 	function (e) {
@@ -154,8 +160,9 @@ Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 			gotMeassage(tx);
 		},
 	});
-	async function gotMeassage(tx) {
-		tx = decodeTxRaw(tx);
+	async function gotMeassage(rawtx) {
+		let tx = decodeTxRaw(rawtx.tx);
+		console.log(tx);
 		if (
 			!tx.body ||
 			!tx.body.memo.startsWith("HUAMSG:") ||
@@ -167,9 +174,16 @@ Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 		messages.value.push({
 			msg: tx.body.memo.split(":")[1],
 			from: { nickname: tx.body.memo.split(":")[2] },
-			hash: txEs[txi].hash,
+			hash: rawtx.hash,
 		});
-		messagesdiv.value.scrollTop = messagesdiv.value.scrollHeight;
+
+		if (messages.value.length < 1) return;
+
+		nextTick(() => {
+			[...document.getElementsByClassName("message")][
+				document.getElementsByClassName("message").length - 1
+			].scrollIntoViewIfNeeded("smooth");
+		});
 	}
 });
 
@@ -179,11 +193,7 @@ async function sendMsg() {
 	if (msg.length < 1) {
 		return;
 	}
-	messages.value.push({
-		msg: msg,
-		from: { nickname: keystationAccount.value.account },
-		hash: "",
-	});
+
 	let accInfo = await (
 		await fetch(
 			`${keystation.lcd}/auth/accounts/${keystationAccount.value.address}`
