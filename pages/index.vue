@@ -129,7 +129,7 @@ function login() {
 	let popup = keystation.openWindow("signin", prefix);
 }
 
-const rpcEndpoint = "https://rpc.chihuahua.wtf";
+const rpcEndpoint = "wss://rpc.chihuahua.wtf";
 
 Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 	window.tmClient = tmClient;
@@ -141,30 +141,38 @@ Tendermint34Client.connect(rpcEndpoint).then(async (tmClient) => {
 			{ sentFromOrTo: channel },
 			{ minHeight: 1800000 }
 		);
-		messages.value = txEs
-			.map((txE) => decodeTxRaw(txE.tx))
-			.filter(
-				(tx) =>
-					tx.body.memo &&
-					tx.body.memo.startsWith("HUAMSG:") &&
-					tx.body.memo.split(":").length == 3 &&
-					tx.body.memo.split(":")[1].length > 0
-			)
-			.map((tx, txi) => {
-				// console.log(tx);
-				// console.log(rawSecp256k1PubkeyToRawAddress(tx.signatures[0]));
-				return {
-					msg: tx.body.memo.split(":")[1],
-					from: { nickname: tx.body.memo.split(":")[2] },
-					hash: txEs[txi].hash,
-				};
-			});
+		txEs.forEach((tx) => {
+			gotMeassage(tx);
+		});
+	}
+
+	fetchMessages();
+	(
+		await tmClient.subscribeTx("transfer.recipient='" + channel + "'")
+	).addListener({
+		next: (tx) => {
+			gotMeassage(tx);
+		},
+	});
+	async function gotMeassage(tx) {
+		tx = decodeTxRaw(tx);
+		if (
+			!tx.body ||
+			!tx.body.memo.startsWith("HUAMSG:") ||
+			tx.body.memo.split(":").length != 3 ||
+			!tx.body.memo.split(":")[1].length > 0
+		) {
+			return;
+		}
+		messages.value.push({
+			msg: tx.body.memo.split(":")[1],
+			from: { nickname: tx.body.memo.split(":")[2] },
+			hash: txEs[txi].hash,
+		});
 		messagesdiv.value.scrollTop = messagesdiv.value.scrollHeight;
 	}
-	fetchMessages();
-
-	setInterval(fetchMessages, 10000);
 });
+
 async function sendMsg() {
 	let msg = currentMsg.value;
 	currentMsg.value = "";
